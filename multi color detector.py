@@ -41,6 +41,8 @@ while True:
     # curtain detector
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
+    img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 
     blue_mtx = ColorMatrix(rgb=(232,159,95),ub=blue_upper_bond,lb=blue_lower_bond)
     green_mtx = ColorMatrix(rgb=(118,232,95),ub=green_upper_bond,lb=green_lower_bond)
@@ -48,7 +50,16 @@ while True:
     skin_mtx = ColorMatrix(rgb=(95,200,232),ub=skin_upper_bond,lb=skin_lower_bond)
     hair_mtx = ColorMatrix(rgb=(95,166,232),ub=hair_upper_bond,lb=hair_lower_bond)
 
-    matrix = [green_mtx,pink_mtx,blue_mtx,skin_mtx]
+
+    edge_mtx = ColorMatrix(rgb=(236,252,3))
+    img_blur = cv2.GaussianBlur(img_gray, (3, 3), 0,0)
+    edges = cv2.Canny(image=img_blur, threshold1=100, threshold2=200)  # Canny Edge Detection
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))  # Kernel shape
+    dilated_edges = cv2.dilate(edges, kernel)
+    edge_image = cv2.bitwise_and(pink_mtx.mtx,pink_mtx.mtx,mask=dilated_edges)
+
+
+    matrix = [green_mtx,blue_mtx,skin_mtx]
     masks = []
     for mat in matrix:
         mask = cv2.inRange(hsv, mat.lb, mat.ub)
@@ -60,7 +71,7 @@ while True:
         masked_image = cv2.bitwise_and(matrix[i].mtx, matrix[i].mtx, mask=mask)
         masked_images.append(masked_image)
 
-    result = masked_images[0]
+    result = edge_image
     for resmat in masked_images:
         result = cv2.add(result,resmat)
 

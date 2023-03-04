@@ -4,6 +4,10 @@ import numpy as np
 cap = cv2.VideoCapture(0)
 
 
+grad = cv2.imread("top.jpg")
+grad = cv2.resize(grad,(640,480))
+
+
 # Blue
 blue_upper_bond = np.array([120, 255, 255])
 blue_lower_bond = np.array([95, 43, 67])
@@ -17,13 +21,15 @@ green_upper_bond = np.array([86,255,255])
 green_lower_bond = np.array([41,47, 72])
 
 # Skin
-skin_upper_bond = np.array([40,246,218])
-skin_lower_bond = np.array([0,84, 0])
+skin_upper_bond = np.array([20,255,255])
+skin_lower_bond = np.array([0,20, 70])
 
 # Hair
 hair_upper_bond = np.array([179,255,255])
 hair_lower_bond = np.array([29,91, 0])
 
+hair_upper_bond = np.array([0,30,50])
+hair_lower_bond = np.array([20,255, 255])
 
 class ColorMatrix():
     def __init__(self,rgb=(0,0,0),ub=np.array([0,0,0]),lb=np.array([0,0,0])):
@@ -55,17 +61,22 @@ while True:
     edge_mtx = ColorMatrix(rgb=(236,252,3))
     img_blur = cv2.GaussianBlur(img_gray, (3, 3), 0,0)
     edges = cv2.Canny(image=img_blur, threshold1=100, threshold2=200)  # Canny Edge Detection
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))  # Kernel shape
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))  # Kernel shape
     dilated_edges = cv2.dilate(edges, kernel)
-    edge_image = cv2.bitwise_and(image,image,mask=dilated_edges)
+    edge_image = cv2.bitwise_and(grad,grad,mask=dilated_edges)
 
-
-    matrix = [green_mtx,blue_mtx,skin_mtx]
+    # kernel = np.ones((3, 3), np.uint8)
+    matrix = [green_mtx,blue_mtx,skin_mtx,hair_mtx]
     masks = []
     for mat in matrix:
         mask = cv2.inRange(hsv, mat.lb, mat.ub)
         _, mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask = cv2.dilate(mask, kernel, iterations=1)
+        # if cv2.countNonZero(mask)>500:
         masks.append(mask)
+
 
     masked_images = []
     for i,mask in enumerate(masks):

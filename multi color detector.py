@@ -3,6 +3,7 @@ import numpy as np
 
 cap = cv2.VideoCapture(0)
 
+
 # Blue
 blue_upper_bond = np.array([120, 255, 255])
 blue_lower_bond = np.array([95, 43, 67])
@@ -56,7 +57,7 @@ while True:
     edges = cv2.Canny(image=img_blur, threshold1=100, threshold2=200)  # Canny Edge Detection
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))  # Kernel shape
     dilated_edges = cv2.dilate(edges, kernel)
-    edge_image = cv2.bitwise_and(pink_mtx.mtx,pink_mtx.mtx,mask=dilated_edges)
+    edge_image = cv2.bitwise_and(image,image,mask=dilated_edges)
 
 
     matrix = [green_mtx,blue_mtx,skin_mtx]
